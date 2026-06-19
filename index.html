@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIFTY Option Chain Analysis</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e17;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid #00d4ff;
+            margin-bottom: 30px;
+        }
+        .header h1 { 
+            color: #00d4ff;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .header .time { 
+            color: #888;
+            font-size: 0.9em;
+        }
+        .sentiment-badge {
+            display: inline-block;
+            padding: 10px 30px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .bullish { background: #00c853; color: #fff; }
+        .bearish { background: #d32f2f; color: #fff; }
+        .risky { background: #ff9800; color: #fff; }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .card {
+            background: #141b2d;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #1a2a3a;
+        }
+        .card h3 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #1a2a3a;
+        }
+        .stat-row .label { color: #888; }
+        .stat-row .value { color: #fff; font-weight: bold; }
+        .stat-row .positive { color: #00c853; }
+        .stat-row .negative { color: #d32f2f; }
+        
+        .strike-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .strike-table th {
+            background: #1a2a3a;
+            color: #00d4ff;
+            padding: 12px;
+            text-align: left;
+            font-size: 0.9em;
+        }
+        .strike-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #1a2a3a;
+            font-size: 0.9em;
+        }
+        .strike-table .strong { background: rgba(0, 212, 255, 0.1); }
+        .strike-table .atm { background: rgba(255, 193, 7, 0.1); }
+        
+        .status {
+            text-align: center;
+            padding: 10px;
+            color: #888;
+            font-size: 0.9em;
+        }
+        .status .live { color: #00c853; }
+        
+        @media (max-width: 600px) {
+            .header h1 { font-size: 1.8em; }
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 NIFTY Option Chain</h1>
+            <div id="sentimentDisplay"></div>
+            <div class="time">Last Updated: <span id="lastUpdate">Loading...</span></div>
+        </div>
+        
+        <div id="analysisGrid" class="grid">
+            <div class="card">
+                <h3>📍 ATM & Spot</h3>
+                <div id="atmData">
+                    <div class="stat-row"><span class="label">Spot Price</span><span class="value" id="spotPrice">-</span></div>
+                    <div class="stat-row"><span class="label">ATM Strike</span><span class="value" id="atmStrike">-</span></div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>⚡ Peak Strikes</h3>
+                <div id="peakData">
+                    <div class="stat-row"><span class="label">CE Peak OI</span><span class="value" id="cePeak">-</span></div>
+                    <div class="stat-row"><span class="label">PE Peak OI</span><span class="value" id="pePeak">-</span></div>
+                    <div class="stat-row"><span class="label">CE Movement</span><span class="value" id="ceMovement">-</span></div>
+                    <div class="stat-row"><span class="label">PE Movement</span><span class="value" id="peMovement">-</span></div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>🛡️ Support & Resistance</h3>
+                <div id="srData">
+                    <div class="stat-row"><span class="label">Support</span><span class="value" id="support">-</span></div>
+                    <div class="stat-row"><span class="label">Support SL</span><span class="value" id="supportSl">-</span></div>
+                    <div class="stat-row"><span class="label">Resistance</span><span class="value" id="resistance">-</span></div>
+                    <div class="stat-row"><span class="label">Resistance SL</span><span class="value" id="resistanceSl">-</span></div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>🎯 Targets</h3>
+                <div id="targetData">
+                    <div class="stat-row"><span class="label">Buy Target 1</span><span class="value" id="target1Buy">-</span></div>
+                    <div class="stat-row"><span class="label">Buy Target 2</span><span class="value" id="target2Buy">-</span></div>
+                    <div class="stat-row"><span class="label">Sell Target 1</span><span class="value" id="target1Sell">-</span></div>
+                    <div class="stat-row"><span class="label">Sell Target 2</span><span class="value" id="target2Sell">-</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>📋 Strike-wise Analysis</h3>
+            <div style="overflow-x: auto;">
+                <table class="strike-table" id="strikeTable">
+                    <thead>
+                        <tr>
+                            <th>Strike</th>
+                            <th>CE OI %</th>
+                            <th>CE Vol %</th>
+                            <th>PE OI %</th>
+                            <th>PE Vol %</th>
+                            <th>OI Diff</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="strikeTableBody">
+                        <tr><td colspan="7" style="text-align:center;color:#888;">Loading data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="status">
+            <span class="live">● LIVE</span> Real-time updates every 10 seconds
+        </div>
+    </div>
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // =============================================
+        // CONFIGURATION - Replace with your values
+        // =============================================
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';  // From your Supabase dashboard
+        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';  // From your Supabase dashboard
+        // =============================================
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        let currentData = null;
+        
+        // Function to update the display
+        function updateDisplay(data) {
+            if (!data) return;
+            
+            currentData = data;
+            
+            // Update time
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+            
+            // Update sentiment
+            const sentimentEl = document.getElementById('sentimentDisplay');
+            const sentiment = data.sentiment || 'RISKY';
+            const badgeClass = sentiment.toLowerCase();
+            sentimentEl.innerHTML = `<div class="sentiment-badge ${badgeClass}">${sentiment}</div>`;
+            
+            // Update ATM & Spot
+            document.getElementById('spotPrice').textContent = data.spot_price || '-';
+            document.getElementById('atmStrike').textContent = data.atm_strike || '-';
+            
+            // Update Peaks
+            document.getElementById('cePeak').textContent = data.ce_peak || '-';
+            document.getElementById('pePeak').textContent = data.pe_peak || '-';
+            document.getElementById('ceMovement').textContent = data.ce_movement || '-';
+            document.getElementById('peMovement').textContent = data.pe_movement || '-';
+            
+            // Update Support & Resistance
+            document.getElementById('support').textContent = data.support || '-';
+            document.getElementById('supportSl').textContent = data.support_sl || '-';
+            document.getElementById('resistance').textContent = data.resistance || '-';
+            document.getElementById('resistanceSl').textContent = data.resistance_sl || '-';
+            
+            // Update Targets
+            document.getElementById('target1Buy').textContent = data.target1_buy || '-';
+            document.getElementById('target2Buy').textContent = data.target2_buy || '-';
+            document.getElementById('target1Sell').textContent = data.target1_sell || '-';
+            document.getElementById('target2Sell').textContent = data.target2_sell || '-';
+            
+            // Update strike table if data exists
+            if (data.strike_data && data.strike_data.length > 0) {
+                updateStrikeTable(data.strike_data);
+            }
+        }
+        
+        function updateStrikeTable(strikes) {
+            const tbody = document.getElementById('strikeTableBody');
+            tbody.innerHTML = '';
+            
+            strikes.forEach(strike => {
+                const row = document.createElement('tr');
+                
+                // Determine if strong zone or ATM
+                const isStrong = strike.ce_oi_pct >= 75 || strike.ce_vol_pct >= 75 || 
+                                strike.pe_oi_pct >= 75 || strike.pe_vol_pct >= 75;
+                const isATM = strike.is_atm || false;
+                
+                let className = '';
+                if (isStrong) className = 'strong';
+                if (isATM) className += ' atm';
+                
+                row.className = className;
+                
+                const oiDiff = strike.oi_diff || 0;
+                const diffClass = oiDiff > 0 ? 'positive' : (oiDiff < 0 ? 'negative' : '');
+                const diffText = oiDiff > 0 ? `+${oiDiff}` : oiDiff;
+                
+                row.innerHTML = `
+                    <td><strong>${strike.strike_price}</strong></td>
+                    <td>${strike.ce_oi_pct ? strike.ce_oi_pct.toFixed(1) + '%' : '-'}</td>
+                    <td>${strike.ce_vol_pct ? strike.ce_vol_pct.toFixed(1) + '%' : '-'}</td>
+                    <td>${strike.pe_oi_pct ? strike.pe_oi_pct.toFixed(1) + '%' : '-'}</td>
+                    <td>${strike.pe_vol_pct ? strike.pe_vol_pct.toFixed(1) + '%' : '-'}</td>
+                    <td class="${diffClass}">${diffText}</td>
+                    <td>${isStrong ? '🔴 STRONG' : ''} ${isATM ? '📍 ATM' : ''}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Function to fetch latest data
+        async function fetchLatestData() {
+            try {
+                // Get the most recent record
+                const { data, error } = await supabase
+                    .from('option_analysis')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .single();
+                
+                if (error) throw error;
+                if (data) updateDisplay(data);
+            } catch (err) {
+                console.error('Error fetching data:', err);
+            }
+        }
+        
+        // Set up real-time subscription
+        function setupRealtime() {
+            const channel = supabase
+                .channel('option-updates')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'option_analysis'
+                    },
+                    (payload) => {
+                        // New data inserted - update the display
+                        updateDisplay(payload.new);
+                    }
+                )
+                .subscribe();
+            
+            return channel;
+        }
+        
+        // Initialize
+        async function init() {
+            await fetchLatestData();
+            setupRealtime();
+            
+            // Also fetch every 10 seconds as fallback
+            setInterval(fetchLatestData, 10000);
+        }
+        
+        // Start everything
+        init();
+    </script>
+</body>
+</html>
