@@ -5,196 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NIFTY Option Chain Analyzer</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0a0e17;
-            color: #e0e0e0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1300px;
-            margin: 0 auto;
-        }
-        .header {
-            text-align: center;
-            padding: 20px 0;
-            border-bottom: 2px solid #00d4ff;
-            margin-bottom: 30px;
-        }
-        .header h1 {
-            color: #00d4ff;
-            font-size: 2.2em;
-            margin-bottom: 10px;
-        }
-        .header .subtitle {
-            color: #888;
-            font-size: 0.9em;
-        }
-        .sentiment-badge {
-            display: inline-block;
-            padding: 12px 35px;
-            border-radius: 30px;
-            font-size: 1.4em;
-            font-weight: bold;
-            margin: 15px 0;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0a0e17; color: #e0e0e0; padding: 20px; }
+        .container { max-width: 1300px; margin: 0 auto; }
+        .header { text-align: center; padding: 20px 0; border-bottom: 2px solid #00d4ff; margin-bottom: 30px; }
+        .header h1 { color: #00d4ff; font-size: 2.2em; }
+        .sentiment-badge { display: inline-block; padding: 12px 35px; border-radius: 30px; font-size: 1.4em; font-weight: bold; margin: 15px 0; }
         .bullish { background: #00c853; color: #fff; }
         .mild-bullish { background: #ffd600; color: #000; }
         .bearish { background: #d32f2f; color: #fff; }
         .mild-bearish { background: #ff6f00; color: #fff; }
         .risky { background: #ff9800; color: #fff; }
         .trap { background: #9e9e9e; color: #fff; }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
-        .card {
-            background: #141b2d;
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid #1a2a3a;
-        }
-        .card h3 {
-            color: #00d4ff;
-            margin-bottom: 15px;
-            font-size: 1em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .stat-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #1a2a3a;
-        }
-        .stat-row .label {
-            color: #888;
-            font-size: 0.9em;
-        }
-        .stat-row .value {
-            color: #fff;
-            font-weight: bold;
-            font-size: 0.95em;
-        }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin: 20px 0; }
+        .card { background: #141b2d; border-radius: 12px; padding: 20px; border: 1px solid #1a2a3a; }
+        .card h3 { color: #00d4ff; margin-bottom: 15px; font-size: 1em; text-transform: uppercase; }
+        .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1a2a3a; }
+        .stat-row .label { color: #888; }
+        .stat-row .value { color: #fff; font-weight: bold; }
         .stat-row .positive { color: #4caf50; }
         .stat-row .negative { color: #ef5350; }
         .stat-row .up { color: #4caf50; }
         .stat-row .down { color: #ef5350; }
         .stat-row .stable { color: #ffd600; }
-        .status {
-            text-align: center;
-            padding: 15px;
-            color: #888;
-            font-size: 0.85em;
-            border-top: 1px solid #1a2a3a;
-            margin-top: 20px;
-        }
-        .status .live { color: #00c853; font-weight: bold; }
-        .status .offline { color: #ef5350; font-weight: bold; }
-        
-        .strike-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 15px 0;
-            font-size: 0.85em;
-        }
-        .strike-table thead th {
-            background: #1a2a3a;
-            color: #00d4ff;
-            padding: 10px 8px;
-            text-align: center;
-            font-weight: 600;
-            border-bottom: 2px solid #00d4ff;
-            font-size: 0.85em;
-        }
-        .strike-table tbody td {
-            padding: 4px 6px;
-            text-align: center;
-            border-bottom: 1px solid #1a2a3a;
-            vertical-align: middle;
-        }
-        .strike-table .strike-cell {
-            font-weight: bold;
-            color: #fff;
-            font-size: 1em;
-        }
-        .strike-table .diff-cell {
-            font-size: 0.8em;
-            font-weight: 600;
-        }
+        .strike-table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 0.85em; }
+        .strike-table th { background: #1a2a3a; color: #00d4ff; padding: 10px; text-align: center; border-bottom: 2px solid #00d4ff; }
+        .strike-table td { padding: 6px; text-align: center; border-bottom: 1px solid #1a2a3a; }
+        .atm-cell { background: rgba(0, 180, 255, 0.25) !important; border-radius: 4px; }
+        .ce-100 { background: rgba(255, 80, 80, 0.25) !important; font-weight: bold; }
+        .pe-100 { background: rgba(80, 200, 80, 0.25) !important; font-weight: bold; }
+        .ce-strong { background: rgba(255, 200, 0, 0.2) !important; }
+        .pe-strong { background: rgba(255, 200, 0, 0.2) !important; }
         .diff-positive { color: #4caf50; }
         .diff-negative { color: #ef5350; }
-        
-        /* =============================================
-           EXCEL-STYLE CELL COLORS (ONLY CELLS)
-           ============================================= */
-        
-        /* ATM - Sky Blue (ONLY the strike cell) */
-        .atm-cell {
-            background: rgba(0, 180, 255, 0.25) !important;
-            border-radius: 4px;
-        }
-        
-        /* CE 100% - Soft Red */
-        .ce-100 {
-            background: rgba(255, 80, 80, 0.25) !important;
-            font-weight: bold;
-        }
-        
-        /* PE 100% - Soft Green */
-        .pe-100 {
-            background: rgba(80, 200, 80, 0.25) !important;
-            font-weight: bold;
-        }
-        
-        /* CE ≥ 75% - Soft Yellow */
-        .ce-strong {
-            background: rgba(255, 200, 0, 0.2) !important;
-        }
-        
-        /* PE ≥ 75% - Soft Yellow */
-        .pe-strong {
-            background: rgba(255, 200, 0, 0.2) !important;
-        }
-        
-        .status-badge {
-            font-size: 0.7em;
-            padding: 2px 6px;
-            border-radius: 10px;
-            display: inline-block;
-        }
+        .status-badge { font-size: 0.7em; padding: 2px 6px; border-radius: 10px; display: inline-block; }
         .status-strong { color: #ff9800; background: rgba(255, 150, 0, 0.15); }
         .status-atm { color: #00b4ff; background: rgba(0, 180, 255, 0.15); }
-        
-        .status-dot {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-        .status-dot.live {
-            background: #00c853;
-            animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.3; }
-            100% { opacity: 1; }
-        }
-        @media (max-width: 600px) {
-            .header h1 { font-size: 1.5em; }
-            .grid { grid-template-columns: 1fr; }
-            .strike-table { font-size: 0.6em; }
-            .strike-table th, .strike-table td { padding: 2px; }
-        }
+        .status { text-align: center; padding: 15px; color: #888; font-size: 0.85em; border-top: 1px solid #1a2a3a; margin-top: 20px; }
+        .status .live { color: #00c853; font-weight: bold; }
+        .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; background: #00c853; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        .subtitle { color: #888; font-size: 0.9em; margin-top: 5px; }
+        @media (max-width: 600px) { .header h1 { font-size: 1.5em; } .grid { grid-template-columns: 1fr; } .strike-table { font-size: 0.65em; } }
     </style>
 </head>
 <body>
@@ -206,16 +58,14 @@
             <div class="subtitle" id="tradingStatus">Status: Checking...</div>
         </div>
 
-        <div id="gridContainer" class="grid">
-            <div class="card">
-                <h3>📍 ATM & Spot</h3>
+        <div class="grid">
+            <div class="card"><h3>📍 ATM & Spot</h3>
                 <div id="atmData">
                     <div class="stat-row"><span class="label">Spot Price</span><span class="value" id="spotPrice">-</span></div>
                     <div class="stat-row"><span class="label">ATM Strike</span><span class="value" id="atmStrike">-</span></div>
                 </div>
             </div>
-            <div class="card">
-                <h3>⚡ Peak Strikes</h3>
+            <div class="card"><h3>⚡ Peak Strikes</h3>
                 <div id="peakData">
                     <div class="stat-row"><span class="label">CE Peak</span><span class="value" id="cePeak">-</span></div>
                     <div class="stat-row"><span class="label">CE Movement</span><span class="value" id="ceMovement">-</span></div>
@@ -223,8 +73,7 @@
                     <div class="stat-row"><span class="label">PE Movement</span><span class="value" id="peMovement">-</span></div>
                 </div>
             </div>
-            <div class="card">
-                <h3>🛡️ Support & Resistance</h3>
+            <div class="card"><h3>🛡️ Support & Resistance</h3>
                 <div id="srData">
                     <div class="stat-row"><span class="label">Support</span><span class="value" id="support">-</span></div>
                     <div class="stat-row"><span class="label">Support SL</span><span class="value" id="supportSl">-</span></div>
@@ -232,16 +81,14 @@
                     <div class="stat-row"><span class="label">Resistance SL</span><span class="value" id="resistanceSl">-</span></div>
                 </div>
             </div>
-            <div class="card">
-                <h3>📈 Buy Side</h3>
+            <div class="card"><h3>📈 Buy Side</h3>
                 <div id="buyData">
                     <div class="stat-row"><span class="label">Entry</span><span class="value" id="buyEntry">-</span></div>
                     <div class="stat-row"><span class="label">Stop Loss</span><span class="value" id="buySl">-</span></div>
                     <div class="stat-row"><span class="label">Target</span><span class="value" id="buyTarget">-</span></div>
                 </div>
             </div>
-            <div class="card">
-                <h3>📉 Sell Side</h3>
+            <div class="card"><h3>📉 Sell Side</h3>
                 <div id="sellData">
                     <div class="stat-row"><span class="label">Entry</span><span class="value" id="sellEntry">-</span></div>
                     <div class="stat-row"><span class="label">Stop Loss</span><span class="value" id="sellSl">-</span></div>
@@ -254,26 +101,15 @@
             <h3>📋 Strike-wise Analysis</h3>
             <div style="overflow-x: auto;">
                 <table class="strike-table" id="strikeTable">
-                    <thead>
-                        <tr>
-                            <th>CE OI</th>
-                            <th>CE %</th>
-                            <th>Strike</th>
-                            <th>PE %</th>
-                            <th>PE OI</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="strikeTableBody">
-                        <tr><td colspan="6" style="text-align:center;color:#888;">Waiting for data...</td></tr>
-                    </tbody>
+                    <thead><tr><th>CE OI</th><th>CE %</th><th>Strike</th><th>PE %</th><th>PE OI</th><th>Status</th></tr></thead>
+                    <tbody id="strikeTableBody"><tr><td colspan="6" style="text-align:center;color:#888;">Loading data...</td></tr></tbody>
                 </table>
             </div>
         </div>
 
         <div class="status">
-            <span id="statusIndicator"><span class="status-dot live"></span> LIVE</span>
-            | Updates every 30 seconds
+            <span id="statusIndicator"><span class="status-dot"></span> LIVE</span>
+            | Updates every 1 minute
             | Trading Hours: 9:00 AM - 3:45 PM IST
         </div>
     </div>
@@ -281,10 +117,17 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
     </script>
     <script>
+        // =============================================
+        // SUPABASE DETAILS - YOUR CORRECT KEYS
+        // =============================================
         const SUPABASE_URL = 'https://okxehbgomqsmfbzpsgrm.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9reGVoYmdvbXFzbWZienBzZ3JtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4ODU4NTMsImV4cCI6MjA5NzQ2MTg1M30.8KCec5lIzhha3mRx3b3shRF8bH7-rfVDT3KktR95TBc';
 
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // =============================================
+        // HELPER FUNCTIONS
+        // =============================================
 
         function getSentimentClass(s) {
             if (!s) return 'risky';
@@ -329,16 +172,31 @@
             return formatNumber(n);
         }
 
-        function updateDisplay(data) {
-            if (!data) return;
+        // =============================================
+        // UPDATE DISPLAY
+        // =============================================
 
+        function updateDisplay(data) {
+            if (!data) {
+                console.log('No data received');
+                return;
+            }
+
+            console.log('Updating display with data:', data);
+
+            // Update time
             if (data.last_updated) {
                 const d = new Date(data.last_updated);
                 document.getElementById('lastUpdate').textContent = 'Last Updated: ' + d.toLocaleString('en-IN', {
                     timeZone: 'Asia/Kolkata'
                 });
+            } else {
+                document.getElementById('lastUpdate').textContent = 'Last Updated: ' + new Date().toLocaleString('en-IN', {
+                    timeZone: 'Asia/Kolkata'
+                });
             }
 
+            // Update sentiment
             const sentiment = data.sentiment || 'RISKY';
             const isTrap = data.is_trap || false;
             const el = document.getElementById('sentimentDisplay');
@@ -346,11 +204,15 @@
             if (isTrap) txt = '⚠️ TRAP - NO TRADE';
             el.innerHTML = `<div class="sentiment-badge ${getSentimentClass(sentiment)}">${txt}</div>`;
 
+            // Update ATM & Spot
             document.getElementById('spotPrice').textContent = formatNumber(data.spot_price);
             document.getElementById('atmStrike').textContent = formatNumber(data.atm_strike);
+
+            // Update Peaks
             document.getElementById('cePeak').textContent = formatNumber(data.ce_peak);
             document.getElementById('pePeak').textContent = formatNumber(data.pe_peak);
 
+            // Update Movements
             const ce = document.getElementById('ceMovement');
             ce.textContent = data.ce_movement ? `${getMovementArrow(data.ce_movement)} ${data.ce_movement}` : '-';
             ce.className = 'value ' + getMovementClass(data.ce_movement);
@@ -359,82 +221,115 @@
             pe.textContent = data.pe_movement ? `${getMovementArrow(data.pe_movement)} ${data.pe_movement}` : '-';
             pe.className = 'value ' + getMovementClass(data.pe_movement);
 
+            // Update Support & Resistance
             document.getElementById('support').textContent = formatNumber(data.support);
             document.getElementById('supportSl').textContent = formatNumber(data.support_sl);
             document.getElementById('resistance').textContent = formatNumber(data.resistance);
             document.getElementById('resistanceSl').textContent = formatNumber(data.resistance_sl);
+
+            // Update Buy Side
             document.getElementById('buyEntry').textContent = formatNumber(data.buy_entry);
             document.getElementById('buySl').textContent = formatNumber(data.buy_sl);
             document.getElementById('buyTarget').textContent = formatNumber(data.buy_target);
+
+            // Update Sell Side
             document.getElementById('sellEntry').textContent = formatNumber(data.sell_entry);
             document.getElementById('sellSl').textContent = formatNumber(data.sell_sl);
             document.getElementById('sellTarget').textContent = formatNumber(data.sell_target);
 
+            // Update Strike Table
             if (data.strike_data && data.strike_data.length > 0) {
                 updateStrikeTable(data.strike_data);
+                document.getElementById('tradingStatus').textContent = '✅ System Running - ' + data.strike_data.length + ' strikes';
+            } else {
+                document.getElementById('tradingStatus').textContent = '⚠️ No strike data available';
             }
         }
+
+        // =============================================
+        // STRIKE TABLE
+        // =============================================
 
         function updateStrikeTable(strikes) {
             const tbody = document.getElementById('strikeTableBody');
             tbody.innerHTML = '';
 
+            if (!strikes || strikes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#888;">No strike data</td></tr>';
+                return;
+            }
+
             strikes.forEach(s => {
                 const tr = document.createElement('tr');
-                
                 const cePct = s.ce_oi_pct || 0;
                 const pePct = s.pe_oi_pct || 0;
-                
+
                 // CE cell class
                 let ceClass = '';
                 if (cePct >= 100) ceClass = 'ce-100';
                 else if (cePct >= 75) ceClass = 'ce-strong';
-                
+
                 // PE cell class
                 let peClass = '';
                 if (pePct >= 100) peClass = 'pe-100';
                 else if (pePct >= 75) peClass = 'pe-strong';
-                
-                // Strike cell - ATM gets sky blue (ONLY the cell)
+
+                // ATM cell class
                 let strikeClass = '';
                 if (s.is_atm) strikeClass = 'atm-cell';
-                
+
+                // Status badges
                 let statusHtml = '';
                 if (s.is_strong) statusHtml += '<span class="status-badge status-strong">🔴 STRONG</span> ';
                 if (s.is_atm) statusHtml += '<span class="status-badge status-atm">📍 ATM</span>';
                 if (!statusHtml) statusHtml = '-';
-                
+
+                // Diff
                 const diff = s.oi_diff || 0;
                 const diffClass = diff > 0 ? 'diff-positive' : (diff < 0 ? 'diff-negative' : '');
-                
+
                 tr.innerHTML = `
                     <td>${formatNumber(s.ce_oi)}</td>
                     <td class="${ceClass}">${formatPercentage(cePct)}</td>
                     <td>
-                        <div class="strike-cell ${strikeClass}">${formatNumber(s.strike)}</div>
-                        <div class="diff-cell ${diffClass}">${formatDiff(diff)}</div>
+                        <div class="${strikeClass}" style="font-weight:bold;">${formatNumber(s.strike)}</div>
+                        <div class="${diffClass}" style="font-size:0.8em;">${formatDiff(diff)}</div>
                     </td>
                     <td class="${peClass}">${formatPercentage(pePct)}</td>
                     <td>${formatNumber(s.pe_oi)}</td>
                     <td>${statusHtml}</td>
                 `;
-                
+
                 tbody.appendChild(tr);
             });
         }
 
+        // =============================================
+        // FETCH DATA
+        // =============================================
+
         async function fetchLatestData() {
             try {
+                console.log('Fetching latest data...');
                 const { data, error } = await supabase
                     .from('option_analysis')
                     .select('*')
                     .order('created_at', { ascending: false })
                     .limit(1);
 
-                if (error) throw error;
+                if (error) {
+                    console.error('Supabase error:', error);
+                    throw error;
+                }
+
+                console.log('Data fetched:', data);
+
                 if (data && data.length > 0) {
                     updateDisplay(data[0]);
-                    document.getElementById('tradingStatus').textContent = '✅ System Running';
+                } else {
+                    console.log('No data found in table');
+                    document.getElementById('tradingStatus').textContent = '⏳ No data found';
+                    document.getElementById('strikeTableBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#888;">No data available</td></tr>';
                 }
             } catch (err) {
                 console.error('Error fetching data:', err);
@@ -442,21 +337,39 @@
             }
         }
 
+        // =============================================
+        // REALTIME SUBSCRIPTION
+        // =============================================
+
         function setupRealtime() {
-            return supabase
+            console.log('Setting up realtime...');
+            const channel = supabase
                 .channel('option-updates')
                 .on('postgres_changes', {
                     event: 'INSERT',
                     schema: 'public',
                     table: 'option_analysis'
-                }, payload => updateDisplay(payload.new))
-                .subscribe();
+                }, payload => {
+                    console.log('Realtime update received:', payload);
+                    updateDisplay(payload.new);
+                })
+                .subscribe((status) => {
+                    console.log('Realtime subscription status:', status);
+                });
+
+            return channel;
         }
 
+        // =============================================
+        // INIT
+        // =============================================
+
         async function init() {
+            console.log('Initializing...');
             await fetchLatestData();
             setupRealtime();
             setInterval(fetchLatestData, 10000);
+            console.log('Initialization complete');
         }
 
         init();
