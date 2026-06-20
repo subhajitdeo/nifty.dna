@@ -38,9 +38,6 @@
         .pe-strong { background: rgba(255, 200, 0, 0.2) !important; }
         .diff-positive { color: #4caf50; }
         .diff-negative { color: #ef5350; }
-        .status-badge { font-size: 0.7em; padding: 2px 6px; border-radius: 10px; display: inline-block; }
-        .status-strong { color: #ff9800; background: rgba(255, 150, 0, 0.15); }
-        .status-atm { color: #00b4ff; background: rgba(0, 180, 255, 0.15); }
         .status { text-align: center; padding: 15px; color: #888; font-size: 0.85em; border-top: 1px solid #1a2a3a; margin-top: 20px; }
         .status .live { color: #00c853; font-weight: bold; }
         .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; background: #00c853; animation: pulse 1.5s infinite; }
@@ -101,8 +98,8 @@
             <h3>📋 Strike-wise Analysis</h3>
             <div style="overflow-x: auto;">
                 <table class="strike-table" id="strikeTable">
-                    <thead><tr><th>CE OI</th><th>CE %</th><th>Strike</th><th>PE %</th><th>PE OI</th><th>Status</th></tr></thead>
-                    <tbody id="strikeTableBody"><tr><td colspan="6" style="text-align:center;color:#888;">Loading data...</td></tr></tbody>
+                    <thead><tr><th>CE OI</th><th>CE %</th><th>Strike</th><th>PE %</th><th>PE OI</th></tr></thead>
+                    <tbody id="strikeTableBody"><tr><td colspan="5" style="text-align:center;color:#888;">Loading data...</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -118,7 +115,7 @@
     </script>
     <script>
         // =============================================
-        // SUPABASE DETAILS - YOUR CORRECT KEYS
+        // SUPABASE DETAILS - USING YOUR ANON KEY
         // =============================================
         const SUPABASE_URL = 'https://okxehbgomqsmfbzpsgrm.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9reGVoYmdvbXFzbWZienBzZ3JtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4ODU4NTMsImV4cCI6MjA5NzQ2MTg1M30.8KCec5lIzhha3mRx3b3shRF8bH7-rfVDT3KktR95TBc';
@@ -177,26 +174,15 @@
         // =============================================
 
         function updateDisplay(data) {
-            if (!data) {
-                console.log('No data received');
-                return;
-            }
+            if (!data) return;
 
-            console.log('Updating display with data:', data);
-
-            // Update time
             if (data.last_updated) {
                 const d = new Date(data.last_updated);
                 document.getElementById('lastUpdate').textContent = 'Last Updated: ' + d.toLocaleString('en-IN', {
                     timeZone: 'Asia/Kolkata'
                 });
-            } else {
-                document.getElementById('lastUpdate').textContent = 'Last Updated: ' + new Date().toLocaleString('en-IN', {
-                    timeZone: 'Asia/Kolkata'
-                });
             }
 
-            // Update sentiment
             const sentiment = data.sentiment || 'RISKY';
             const isTrap = data.is_trap || false;
             const el = document.getElementById('sentimentDisplay');
@@ -204,15 +190,11 @@
             if (isTrap) txt = '⚠️ TRAP - NO TRADE';
             el.innerHTML = `<div class="sentiment-badge ${getSentimentClass(sentiment)}">${txt}</div>`;
 
-            // Update ATM & Spot
             document.getElementById('spotPrice').textContent = formatNumber(data.spot_price);
             document.getElementById('atmStrike').textContent = formatNumber(data.atm_strike);
-
-            // Update Peaks
             document.getElementById('cePeak').textContent = formatNumber(data.ce_peak);
             document.getElementById('pePeak').textContent = formatNumber(data.pe_peak);
 
-            // Update Movements
             const ce = document.getElementById('ceMovement');
             ce.textContent = data.ce_movement ? `${getMovementArrow(data.ce_movement)} ${data.ce_movement}` : '-';
             ce.className = 'value ' + getMovementClass(data.ce_movement);
@@ -221,23 +203,17 @@
             pe.textContent = data.pe_movement ? `${getMovementArrow(data.pe_movement)} ${data.pe_movement}` : '-';
             pe.className = 'value ' + getMovementClass(data.pe_movement);
 
-            // Update Support & Resistance
             document.getElementById('support').textContent = formatNumber(data.support);
             document.getElementById('supportSl').textContent = formatNumber(data.support_sl);
             document.getElementById('resistance').textContent = formatNumber(data.resistance);
             document.getElementById('resistanceSl').textContent = formatNumber(data.resistance_sl);
-
-            // Update Buy Side
             document.getElementById('buyEntry').textContent = formatNumber(data.buy_entry);
             document.getElementById('buySl').textContent = formatNumber(data.buy_sl);
             document.getElementById('buyTarget').textContent = formatNumber(data.buy_target);
-
-            // Update Sell Side
             document.getElementById('sellEntry').textContent = formatNumber(data.sell_entry);
             document.getElementById('sellSl').textContent = formatNumber(data.sell_sl);
             document.getElementById('sellTarget').textContent = formatNumber(data.sell_target);
 
-            // Update Strike Table
             if (data.strike_data && data.strike_data.length > 0) {
                 updateStrikeTable(data.strike_data);
                 document.getElementById('tradingStatus').textContent = '✅ System Running - ' + data.strike_data.length + ' strikes';
@@ -247,7 +223,7 @@
         }
 
         // =============================================
-        // STRIKE TABLE
+        // STRIKE TABLE (NO Status Column)
         // =============================================
 
         function updateStrikeTable(strikes) {
@@ -255,7 +231,7 @@
             tbody.innerHTML = '';
 
             if (!strikes || strikes.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#888;">No strike data</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;">No strike data</td></tr>';
                 return;
             }
 
@@ -264,27 +240,17 @@
                 const cePct = s.ce_oi_pct || 0;
                 const pePct = s.pe_oi_pct || 0;
 
-                // CE cell class
                 let ceClass = '';
                 if (cePct >= 100) ceClass = 'ce-100';
                 else if (cePct >= 75) ceClass = 'ce-strong';
 
-                // PE cell class
                 let peClass = '';
                 if (pePct >= 100) peClass = 'pe-100';
                 else if (pePct >= 75) peClass = 'pe-strong';
 
-                // ATM cell class
                 let strikeClass = '';
                 if (s.is_atm) strikeClass = 'atm-cell';
 
-                // Status badges
-                let statusHtml = '';
-                if (s.is_strong) statusHtml += '<span class="status-badge status-strong">🔴 STRONG</span> ';
-                if (s.is_atm) statusHtml += '<span class="status-badge status-atm">📍 ATM</span>';
-                if (!statusHtml) statusHtml = '-';
-
-                // Diff
                 const diff = s.oi_diff || 0;
                 const diffClass = diff > 0 ? 'diff-positive' : (diff < 0 ? 'diff-negative' : '');
 
@@ -297,7 +263,6 @@
                     </td>
                     <td class="${peClass}">${formatPercentage(pePct)}</td>
                     <td>${formatNumber(s.pe_oi)}</td>
-                    <td>${statusHtml}</td>
                 `;
 
                 tbody.appendChild(tr);
@@ -310,7 +275,6 @@
 
         async function fetchLatestData() {
             try {
-                console.log('Fetching latest data...');
                 const { data, error } = await supabase
                     .from('option_analysis')
                     .select('*')
@@ -322,14 +286,11 @@
                     throw error;
                 }
 
-                console.log('Data fetched:', data);
-
                 if (data && data.length > 0) {
                     updateDisplay(data[0]);
                 } else {
-                    console.log('No data found in table');
                     document.getElementById('tradingStatus').textContent = '⏳ No data found';
-                    document.getElementById('strikeTableBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#888;">No data available</td></tr>';
+                    document.getElementById('strikeTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;">No data available</td></tr>';
                 }
             } catch (err) {
                 console.error('Error fetching data:', err);
@@ -342,7 +303,6 @@
         // =============================================
 
         function setupRealtime() {
-            console.log('Setting up realtime...');
             const channel = supabase
                 .channel('option-updates')
                 .on('postgres_changes', {
@@ -350,12 +310,9 @@
                     schema: 'public',
                     table: 'option_analysis'
                 }, payload => {
-                    console.log('Realtime update received:', payload);
                     updateDisplay(payload.new);
                 })
-                .subscribe((status) => {
-                    console.log('Realtime subscription status:', status);
-                });
+                .subscribe();
 
             return channel;
         }
@@ -365,11 +322,9 @@
         // =============================================
 
         async function init() {
-            console.log('Initializing...');
             await fetchLatestData();
             setupRealtime();
             setInterval(fetchLatestData, 10000);
-            console.log('Initialization complete');
         }
 
         init();
