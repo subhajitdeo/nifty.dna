@@ -5,14 +5,18 @@
 </head>
 <body>
     <h2>NIFTY Option Chain Data</h2>
-    <div id="data"></div>
+    <div id="data">Loading...</div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
     </script>
     <script>
+        // =============================================
+        // CORRECT WAY TO INITIALIZE SUPABASE
+        // =============================================
         const SUPABASE_URL = 'https://okxehbgomqsmfbzpsgrm.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9reGVoYmdvbXFzbWZienBzZ3JtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4ODU4NTMsImV4cCI6MjA5NzQ2MTg1M30.8KCec5lIzhha3mRx3b3shRF8bH7-rfVDT3KktR95TBc';
 
+        // Create Supabase client
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function fetchData() {
@@ -22,15 +26,17 @@
                 .order('created_at', { ascending: false })
                 .limit(1);
 
+            const output = document.getElementById('data');
+
             if (error) {
-                document.getElementById('data').innerHTML = '<pre style="color:red;">Error: ' + JSON.stringify(error, null, 2) + '</pre>';
+                output.innerHTML = '<pre style="color:red;">Error: ' + JSON.stringify(error, null, 2) + '</pre>';
                 return;
             }
 
             if (data && data.length > 0) {
-                document.getElementById('data').innerHTML = '<pre>' + JSON.stringify(data[0], null, 2) + '</pre>';
+                output.innerHTML = '<pre>' + JSON.stringify(data[0], null, 2) + '</pre>';
             } else {
-                document.getElementById('data').innerHTML = '<p>No data found</p>';
+                output.innerHTML = '<p>No data found</p>';
             }
         }
 
