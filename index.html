@@ -210,10 +210,6 @@
             pe.textContent = data.pe_movement ? `${getMovementArrow(data.pe_movement)} ${data.pe_movement}` : '-';
             pe.className = 'value ' + getMovementClass(data.pe_movement);
 
-            document.getElementById('support').textContent = formatNumber(data.support);
-            document.getElementById('supportSl').textContent = formatNumber(data.support_sl);
-            document.getElementById('resistance').textContent = formatNumber(data.resistance);
-            document.getElementById('resistanceSl').textContent = formatNumber(data.resistance_sl);
             document.getElementById('buyEntry').textContent = formatNumber(data.buy_entry);
             document.getElementById('buySl').textContent = formatNumber(data.buy_sl);
             document.getElementById('buyTarget').textContent = formatNumber(data.buy_target);
