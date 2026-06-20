@@ -82,14 +82,16 @@
                 <div id="buyData">
                     <div class="stat-row"><span class="label">Entry</span><span class="value" id="buyEntry">-</span></div>
                     <div class="stat-row"><span class="label">Stop Loss</span><span class="value" id="buySl">-</span></div>
-                    <div class="stat-row"><span class="label">Target</span><span class="value" id="buyTarget">-</span></div>
+                    <div class="stat-row"><span class="label">Target 1</span><span class="value" id="buyTarget">-</span></div>
+                    <div class="stat-row"><span class="label">Target 2</span><span class="value" id="buyTarget2">-</span></div>
                 </div>
             </div>
             <div class="card"><h3>📉 Sell Side</h3>
                 <div id="sellData">
                     <div class="stat-row"><span class="label">Entry</span><span class="value" id="sellEntry">-</span></div>
                     <div class="stat-row"><span class="label">Stop Loss</span><span class="value" id="sellSl">-</span></div>
-                    <div class="stat-row"><span class="label">Target</span><span class="value" id="sellTarget">-</span></div>
+                    <div class="stat-row"><span class="label">Target 1</span><span class="value" id="sellTarget">-</span></div>
+                    <div class="stat-row"><span class="label">Target 2</span><span class="value" id="sellTarget2">-</span></div>
                 </div>
             </div>
         </div>
@@ -223,9 +225,12 @@
             document.getElementById('buyEntry').textContent = formatNumber(data.buy_entry);
             document.getElementById('buySl').textContent = formatNumber(data.buy_sl);
             document.getElementById('buyTarget').textContent = formatNumber(data.buy_target);
+            document.getElementById('buyTarget2').textContent = formatNumber(data.buy_target2);
             document.getElementById('sellEntry').textContent = formatNumber(data.sell_entry);
             document.getElementById('sellSl').textContent = formatNumber(data.sell_sl);
             document.getElementById('sellTarget').textContent = formatNumber(data.sell_target);
+            document.getElementById('sellTarget2').textContent = formatNumber(data.sell_target2);
+
 
             if (data.strike_data && data.strike_data.length > 0) {
                 updateStrikeTable(data.strike_data);
