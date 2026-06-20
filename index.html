@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>NIFTY Data - Raw</title>
+    <title>NIFTY Data</title>
 </head>
 <body>
     <h2>NIFTY Option Chain Data</h2>
@@ -11,32 +11,42 @@
     </script>
     <script>
         // =============================================
-        // CORRECT WAY TO INITIALIZE SUPABASE
+        // CREATE SUPABASE CLIENT - DIRECT APPROACH
         // =============================================
+        
+        // The library creates a global 'supabase' object
         const SUPABASE_URL = 'https://okxehbgomqsmfbzpsgrm.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9reGVoYmdvbXFzbWZienBzZ3JtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4ODU4NTMsImV4cCI6MjA5NzQ2MTg1M30.8KCec5lIzhha3mRx3b3shRF8bH7-rfVDT3KktR95TBc';
 
-        // Create Supabase client
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // Check if supabase is available
+        console.log('supabase object:', window.supabase);
+        console.log('supabase.createClient:', window.supabase?.createClient);
+
+        // Create the client
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        console.log('Client created:', sb);
 
         async function fetchData() {
-            const { data, error } = await supabase
-                .from('option_analysis')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(1);
-
             const output = document.getElementById('data');
+            
+            try {
+                const { data, error } = await sb
+                    .from('option_analysis')
+                    .select('*')
+                    .limit(1);
 
-            if (error) {
-                output.innerHTML = '<pre style="color:red;">Error: ' + JSON.stringify(error, null, 2) + '</pre>';
-                return;
-            }
+                if (error) {
+                    output.innerHTML = '<pre style="color:red;">Error: ' + JSON.stringify(error, null, 2) + '</pre>';
+                    return;
+                }
 
-            if (data && data.length > 0) {
-                output.innerHTML = '<pre>' + JSON.stringify(data[0], null, 2) + '</pre>';
-            } else {
-                output.innerHTML = '<p>No data found</p>';
+                if (data && data.length > 0) {
+                    output.innerHTML = '<pre>' + JSON.stringify(data[0], null, 2) + '</pre>';
+                } else {
+                    output.innerHTML = '<p>No data found</p>';
+                }
+            } catch (err) {
+                output.innerHTML = '<pre style="color:red;">Exception: ' + err.message + '</pre>';
             }
         }
 
