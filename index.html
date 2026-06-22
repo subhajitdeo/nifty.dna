@@ -19,12 +19,10 @@
         }
         .container { max-width: 480px; margin: 0 auto; }
         
-        /* Header */
         .header { text-align: center; padding: 12px 0 16px; border-bottom: 1px solid rgba(0,212,255,0.08); margin-bottom: 12px; }
-        .header h1 { color: #00d4ff; font-size: 1.3em; font-weight: 600; letter-spacing: -0.5px; }
+        .header h1 { color: #00d4ff; font-size: 1.3em; font-weight: 600; }
         .header .subtitle { color: #555; font-size: 0.6em; margin-top: 2px; }
         
-        /* Sentiment Badge */
         .sentiment-badge {
             display: inline-block;
             padding: 6px 20px;
@@ -40,7 +38,6 @@
         .risky { background: rgba(255,152,0,0.12); color: #ff9800; border: 1px solid rgba(255,152,0,0.15); }
         .trap { background: rgba(158,158,158,0.12); color: #9e9e9e; border: 1px solid rgba(158,158,158,0.15); }
         
-        /* Spot Card */
         .spot-card {
             background: linear-gradient(135deg, #141b2d, #1a2335);
             border-radius: 10px;
@@ -59,7 +56,6 @@
         .spot-atm { font-size: 0.55em; color: #666; margin-top: 2px; }
         .spot-atm span { color: #ffd600; font-weight: 600; }
         
-        /* Grid */
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
         .card {
             background: #141b2d;
@@ -87,7 +83,6 @@
         .stat-row .down { color: #ef5350; }
         .stat-row .stable { color: #ffd600; }
         
-        /* CE/PE Side */
         .side-card {
             background: #141b2d;
             border-radius: 10px;
@@ -113,7 +108,6 @@
         .side-col .side-label.pe { color: #4caf50; }
         .side-col .stat-row { font-size: 0.65em; padding: 2px 0; }
         
-        /* Chart */
         .chart-card {
             background: #141b2d;
             border-radius: 10px;
@@ -121,9 +115,37 @@
             border: 1px solid rgba(255,255,255,0.03);
             margin-bottom: 12px;
         }
+        .chart-card .card-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 4px;
+        }
         .chart-container { width: 100%; height: 160px; }
         
-        /* Strike Table */
+        .strike-selector {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .strike-selector select {
+            background: #1a2335;
+            color: #e0e0e0;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-size: 0.6em;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+            max-width: 100px;
+        }
+        .strike-selector select option { background: #141b2d; color: #e0e0e0; }
+        .strike-selector .strike-label { color: #555; font-size: 0.55em; }
+        .strike-selector .strike-badge { font-size: 0.5em; padding: 2px 8px; border-radius: 4px; background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.06); }
+        
         .table-card {
             background: #141b2d;
             border-radius: 10px;
@@ -161,7 +183,6 @@
         .strike-middle { font-weight: 700; color: #00d4ff; font-size: 1.1em; }
         .strike-diff { font-size: 0.7em; font-weight: 500; }
         
-        /* Flips */
         .flip-card {
             background: #141b2d;
             border-radius: 10px;
@@ -185,7 +206,6 @@
         .flip-arrow { color: #444; margin: 0 4px; }
         .flip-price { color: #777; }
         
-        /* Status */
         .status {
             text-align: center;
             padding: 8px 0;
@@ -216,6 +236,7 @@
             .side-grid { gap: 6px; }
             .strike-table { font-size: 0.45em; min-width: 260px; }
             .chart-container { height: 120px; }
+            .strike-selector select { max-width: 70px; font-size: 0.5em; }
         }
     </style>
 </head>
@@ -223,14 +244,12 @@
 
 <div class="container">
 
-    <!-- HEADER -->
     <div class="header">
         <h1>📊 NIFTY Analyzer</h1>
         <div id="sentimentDisplay"></div>
         <div class="subtitle" id="tradingStatus">Status: Checking...</div>
     </div>
 
-    <!-- SPOT -->
     <div class="spot-card">
         <div class="spot-left">
             <div class="spot-price"><span id="spotPrice">-</span></div>
@@ -242,7 +261,6 @@
         </div>
     </div>
 
-    <!-- PEAKS -->
     <div class="grid-2">
         <div class="card">
             <div class="card-title">⚡ CE Peak</div>
@@ -256,7 +274,6 @@
         </div>
     </div>
 
-    <!-- CE/PE SIDE -->
     <div class="side-card">
         <div class="side-grid">
             <div class="side-col">
@@ -276,13 +293,18 @@
         </div>
     </div>
 
-    <!-- CHART -->
     <div class="chart-card">
-        <div class="card-title">📈 ATM OI</div>
+        <div class="card-title">
+            <span>📈 OI Chart</span>
+            <div class="strike-selector">
+                <span class="strike-label">Strike:</span>
+                <select id="strikeSelector"></select>
+                <span class="strike-badge" id="strikeBadge">CE</span>
+            </div>
+        </div>
         <div class="chart-container" id="chartContainer"></div>
     </div>
 
-    <!-- STRIKE TABLE -->
     <div class="table-card">
         <div class="card-title">📋 Strike Analysis</div>
         <div style="overflow-x:auto;">
@@ -303,13 +325,11 @@
         </div>
     </div>
 
-    <!-- FLIPS -->
     <div class="flip-card">
         <div class="card-title">🔄 Recent Flips</div>
         <div id="flipList"><div style="text-align:center;color:#444;padding:6px 0;font-size:0.65em;">No flips yet</div></div>
     </div>
 
-    <!-- STATUS -->
     <div class="status">
         <span><span class="live-dot"></span> <span class="live">LIVE</span></span>
         | Updates every 1 min
@@ -322,7 +342,7 @@
 <script>
 
 // =============================================
-// SUPABASE CONFIG - CORRECT KEYS
+// SUPABASE CONFIG
 // =============================================
 const SUPABASE_URL = 'https://kdneyzemvqzhwzztflvq.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkbmV5emVtdnF6aHd6enRmbHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNDI2MzcsImV4cCI6MjA5NzcxODYzN30.qtbbxJqo6Jh4rQZ3QdpH5w7B6j3xrv_mOJ9gBQR3F8E';
@@ -330,15 +350,20 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // =============================================
-// CHART
+// CHART VARIABLES
 // =============================================
 let chart = null;
 let ceLine = null;
 let peLine = null;
 let chartCeData = [];
 let chartPeData = [];
-let chartIndex = 0;
+let currentStrike = null;
+let allStrikes = [];
+let chartHistoryData = {};
 
+// =============================================
+// CHART FUNCTIONS
+// =============================================
 function initChart() {
     const container = document.getElementById('chartContainer');
     chart = LightweightCharts.createChart(container, {
@@ -377,16 +402,63 @@ function updateChart(ceData, peData) {
     if (peData && peData.length > 0) peLine.setData(peData);
 }
 
-function addChartData(ceVal, peVal) {
-    chartIndex++;
-    const ts = Math.floor(Date.now() / 1000);
-    chartCeData.push({ time: ts, value: ceVal || 0 });
-    chartPeData.push({ time: ts, value: peVal || 0 });
-    
-    if (chartCeData.length > 30) chartCeData.shift();
-    if (chartPeData.length > 30) chartPeData.shift();
-    
-    updateChart(chartCeData, chartPeData);
+// =============================================
+// FETCH CHART HISTORY FROM SUPABASE
+// =============================================
+async function fetchChartHistory(strike) {
+    try {
+        console.log('📊 Fetching chart history for strike:', strike);
+        const { data, error } = await sb
+            .from('option_analysis')
+            .select('created_at, strike_data')
+            .order('created_at', { ascending: true })
+            .limit(50);
+
+        if (error) {
+            console.error('Chart history error:', error);
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            console.log('No historical data found');
+            return;
+        }
+
+        const ceData = [];
+        const peData = [];
+
+        data.forEach(record => {
+            let strikes = record.strike_data;
+            if (typeof strikes === 'string') {
+                try { strikes = JSON.parse(strikes); } catch (e) { return; }
+            }
+            
+            const strikeData = Array.isArray(strikes) ? strikes.find(s => s.strike === strike) : null;
+            
+            if (strikeData) {
+                const ts = Math.floor(new Date(record.created_at).getTime() / 1000);
+                ceData.push({ time: ts, value: strikeData.ce_oi || 0 });
+                peData.push({ time: ts, value: strikeData.pe_oi || 0 });
+            }
+        });
+
+        console.log(`📊 Chart data points: CE=${ceData.length}, PE=${peData.length}`);
+
+        if (ceData.length === 0) {
+            // Add placeholder data if none exists
+            const ts = Math.floor(Date.now() / 1000);
+            ceData.push({ time: ts - 60, value: 0 });
+            peData.push({ time: ts - 60, value: 0 });
+            ceData.push({ time: ts, value: 0 });
+            peData.push({ time: ts, value: 0 });
+        }
+
+        chartHistoryData[strike] = { ce: ceData, pe: peData };
+        updateChart(ceData, peData);
+        
+    } catch (err) {
+        console.error('Chart history error:', err);
+    }
 }
 
 // =============================================
@@ -485,15 +557,49 @@ function updateDisplay(data) {
     document.getElementById('tradingStatus').textContent = '✅ Live';
 
     if (data.strike_data && data.strike_data.length > 0) {
+        allStrikes = data.strike_data;
         updateStrikeTable(data.strike_data, data.atm_strike);
-        
-        const atmData = data.strike_data.find(s => s.is_atm);
-        if (atmData) {
-            addChartData(atmData.ce_oi, atmData.pe_oi);
-        }
+        populateStrikeSelector(data.strike_data, data.atm_strike);
     } else {
         document.getElementById('strikeTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#444;padding:12px 0;">No strike data</td></tr>';
     }
+}
+
+// =============================================
+// STRIKE SELECTOR
+// =============================================
+function populateStrikeSelector(strikes, atmStrike) {
+    const selector = document.getElementById('strikeSelector');
+    selector.innerHTML = '';
+
+    const sorted = [...strikes].sort((a, b) => a.strike - b.strike);
+    sorted.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.strike;
+        opt.textContent = s.is_atm ? `📍 ${s.strike}` : `${s.strike}`;
+        if (s.is_atm) opt.style.color = '#ffd600';
+        selector.appendChild(opt);
+    });
+
+    // Set default to ATM
+    const atm = strikes.find(s => s.is_atm);
+    if (atm) {
+        selector.value = atm.strike;
+        currentStrike = atm.strike;
+        document.getElementById('strikeBadge').textContent = '📍 ATM';
+        // Fetch chart history for ATM
+        fetchChartHistory(currentStrike);
+    }
+
+    selector.onchange = function() {
+        currentStrike = parseInt(this.value);
+        const strike = strikes.find(s => s.strike === currentStrike);
+        if (strike) {
+            document.getElementById('strikeBadge').textContent = strike.is_atm ? '📍 ATM' : '';
+            // Fetch chart history for selected strike
+            fetchChartHistory(currentStrike);
+        }
+    };
 }
 
 // =============================================
