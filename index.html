@@ -325,7 +325,36 @@
 // SUPABASE CONFIG
 // =============================================
 const SUPABASE_URL = 'https://kdneyzemvqzhwzztflvq.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkbmV5emVtdnF6aHd6enRmbHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNDI2MzcsImV4cCI6MjA5NzcxODYzN30.MT8XQcFalC2vls8G7BUn06jslzGxUgQc2i_wQ-7Y2so';
+const SUPABASE_KEY = '// =============================================
+// TEST WITH YOUR CORRECT ANON KEY
+// =============================================
+
+const TEST_URL = 'https://kdneyzemvqzhwzztflvq.supabase.co';
+const TEST_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkbmV5emVtdnF6aHd6enRmbHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNDI2MzcsImV4cCI6MjA5NzcxODYzN30.qtbbxJqo6Jh4rQZ3QdpH5w7B6j3xrv_mOJ9gBQR3F8E';
+
+const TEST_CLIENT = window.supabase.createClient(TEST_URL, TEST_KEY);
+
+async function testNow() {
+    console.log('🔍 Testing with your correct anon key...');
+    const { data, error } = await TEST_CLIENT
+        .from('option_analysis')
+        .select('*')
+        .limit(1);
+    
+    if (error) {
+        console.log('❌ Error:', error);
+        return;
+    }
+    
+    if (data && data.length > 0) {
+        console.log('✅ SUCCESS! Data found:');
+        console.log('📊 Record:', data[0]);
+    } else {
+        console.log('⚠️ Connected but no data found');
+    }
+}
+
+testNow();';
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
