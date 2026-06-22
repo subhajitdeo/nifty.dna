@@ -2,343 +2,648 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NIFTY Option Chain Analyzer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NIFTY Analyzer</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js">
+    </script>
+    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: #0a0e17; color: #e0e0e0; padding: 20px; }
-        .container { max-width: 1300px; margin: 0 auto; }
-        .header { text-align: center; padding: 20px 0; border-bottom: 2px solid #00d4ff; margin-bottom: 30px; }
-        .header h1 { color: #00d4ff; font-size: 2.2em; }
-        .sentiment-badge { display: inline-block; padding: 12px 35px; border-radius: 30px; font-size: 1.4em; font-weight: bold; margin: 15px 0; }
-        .bullish { background: #00c853; color: #fff; }
-        .mild-bullish { background: #ffd600; color: #000; }
-        .bearish { background: #d32f2f; color: #fff; }
-        .mild-bearish { background: #ff6f00; color: #fff; }
-        .risky { background: #ff9800; color: #fff; }
-        .trap { background: #9e9e9e; color: #fff; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin: 20px 0; }
-        .card { background: #141b2d; border-radius: 12px; padding: 20px; border: 1px solid #1a2a3a; }
-        .card h3 { color: #00d4ff; margin-bottom: 15px; font-size: 1em; text-transform: uppercase; }
-        .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1a2a3a; }
-        .stat-row .label { color: #888; }
-        .stat-row .value { color: #fff; font-weight: bold; }
-        .stat-row .positive { color: #4caf50; }
-        .stat-row .negative { color: #ef5350; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: #0a0e17;
+            color: #e0e0e0;
+            padding: 12px;
+            min-height: 100vh;
+        }
+        .container { max-width: 480px; margin: 0 auto; }
+        
+        /* Header */
+        .header { text-align: center; padding: 12px 0 16px; border-bottom: 1px solid rgba(0,212,255,0.08); margin-bottom: 12px; }
+        .header h1 { color: #00d4ff; font-size: 1.3em; font-weight: 600; letter-spacing: -0.5px; }
+        .header .subtitle { color: #555; font-size: 0.6em; margin-top: 2px; }
+        
+        /* Sentiment Badge */
+        .sentiment-badge {
+            display: inline-block;
+            padding: 6px 20px;
+            border-radius: 16px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin: 6px 0 4px;
+        }
+        .bullish { background: rgba(0,200,83,0.15); color: #00c853; border: 1px solid rgba(0,200,83,0.2); }
+        .mild-bullish { background: rgba(255,214,0,0.12); color: #ffd600; border: 1px solid rgba(255,214,0,0.15); }
+        .bearish { background: rgba(211,47,47,0.15); color: #ef5350; border: 1px solid rgba(211,47,47,0.2); }
+        .mild-bearish { background: rgba(255,111,0,0.12); color: #ff6f00; border: 1px solid rgba(255,111,0,0.15); }
+        .risky { background: rgba(255,152,0,0.12); color: #ff9800; border: 1px solid rgba(255,152,0,0.15); }
+        .trap { background: rgba(158,158,158,0.12); color: #9e9e9e; border: 1px solid rgba(158,158,158,0.15); }
+        
+        /* Spot Card */
+        .spot-card {
+            background: linear-gradient(135deg, #141b2d, #1a2335);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(0,212,255,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .spot-price { font-size: 1.6em; font-weight: 700; color: #fff; }
+        .spot-time { font-size: 0.55em; color: #555; margin-top: 2px; }
+        .spot-right { text-align: right; }
+        .spot-expiry { font-size: 0.6em; color: #777; background: rgba(0,212,255,0.04); padding: 2px 10px; border-radius: 8px; border: 1px solid rgba(0,212,255,0.05); }
+        .spot-expiry span { color: #00d4ff; font-weight: 600; }
+        .spot-atm { font-size: 0.55em; color: #666; margin-top: 2px; }
+        .spot-atm span { color: #ffd600; font-weight: 600; }
+        
+        /* Grid */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+        .card {
+            background: #141b2d;
+            border-radius: 10px;
+            padding: 10px 12px;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+        .card-title {
+            font-size: 0.45em;
+            text-transform: uppercase;
+            color: #555;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+            font-size: 0.7em;
+        }
+        .stat-row .label { color: #666; }
+        .stat-row .value { color: #fff; font-weight: 600; }
         .stat-row .up { color: #4caf50; }
         .stat-row .down { color: #ef5350; }
         .stat-row .stable { color: #ffd600; }
-        .strike-table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 0.85em; }
-        .strike-table th { background: #1a2a3a; color: #00d4ff; padding: 10px; text-align: center; border-bottom: 2px solid #00d4ff; }
-        .strike-table td { padding: 6px; text-align: center; border-bottom: 1px solid #1a2a3a; }
-        .atm-cell { background: rgba(0, 180, 255, 0.25) !important; border-radius: 4px; }
-        .ce-100 { background: rgba(255, 80, 80, 0.25) !important; font-weight: bold; }
-        .pe-100 { background: rgba(80, 200, 80, 0.25) !important; font-weight: bold; }
-        .ce-strong { background: rgba(255, 200, 0, 0.2) !important; }
-        .pe-strong { background: rgba(255, 200, 0, 0.2) !important; }
+        
+        /* CE/PE Side */
+        .side-card {
+            background: #141b2d;
+            border-radius: 10px;
+            padding: 10px 12px;
+            border: 1px solid rgba(255,255,255,0.03);
+            margin-bottom: 12px;
+        }
+        .side-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .side-col .side-label {
+            font-size: 0.45em;
+            text-transform: uppercase;
+            color: #555;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            text-align: center;
+        }
+        .side-col .side-label.ce { color: #ef5350; }
+        .side-col .side-label.pe { color: #4caf50; }
+        .side-col .stat-row { font-size: 0.65em; padding: 2px 0; }
+        
+        /* Chart */
+        .chart-card {
+            background: #141b2d;
+            border-radius: 10px;
+            padding: 10px 8px;
+            border: 1px solid rgba(255,255,255,0.03);
+            margin-bottom: 12px;
+        }
+        .chart-container { width: 100%; height: 160px; }
+        
+        /* Strike Table */
+        .table-card {
+            background: #141b2d;
+            border-radius: 10px;
+            padding: 10px 8px;
+            border: 1px solid rgba(255,255,255,0.03);
+            margin-bottom: 12px;
+            overflow-x: auto;
+        }
+        .strike-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.55em;
+            min-width: 300px;
+        }
+        .strike-table th {
+            background: rgba(255,255,255,0.02);
+            color: #555;
+            padding: 4px 3px;
+            text-align: center;
+            font-weight: 500;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .strike-table td {
+            padding: 4px 3px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+        }
+        .atm-cell { background: rgba(0,180,255,0.08)!important; }
+        .ce-100 { background: rgba(255,80,80,0.15)!important; font-weight: 600; }
+        .pe-100 { background: rgba(80,200,80,0.15)!important; font-weight: 600; }
+        .ce-strong { background: rgba(255,200,0,0.08)!important; }
+        .pe-strong { background: rgba(255,200,0,0.08)!important; }
         .diff-positive { color: #ef5350; }
         .diff-negative { color: #4caf50; }
-        .status { text-align: center; padding: 15px; color: #888; font-size: 0.85em; border-top: 1px solid #1a2a3a; margin-top: 20px; }
-        .status .live { color: #00c853; font-weight: bold; }
-        .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; background: #00c853; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-        .subtitle { color: #888; font-size: 0.9em; margin-top: 5px; }
-        @media (max-width: 600px) { .header h1 { font-size: 1.5em; } .grid { grid-template-columns: 1fr; } .strike-table { font-size: 0.65em; } }
+        .strike-middle { font-weight: 700; color: #00d4ff; font-size: 1.1em; }
+        .strike-diff { font-size: 0.7em; font-weight: 500; }
+        
+        /* Flips */
+        .flip-card {
+            background: #141b2d;
+            border-radius: 10px;
+            padding: 10px 12px;
+            border: 1px solid rgba(255,255,255,0.03);
+            margin-bottom: 12px;
+        }
+        .flip-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            font-size: 0.65em;
+        }
+        .flip-item:last-child { border-bottom: none; }
+        .flip-time { color: #555; font-size: 0.8em; }
+        .flip-sentiment.bullish { color: #00c853; }
+        .flip-sentiment.bearish { color: #ef5350; }
+        .flip-sentiment.risky { color: #ff9800; }
+        .flip-arrow { color: #444; margin: 0 4px; }
+        .flip-price { color: #777; }
+        
+        /* Status */
+        .status {
+            text-align: center;
+            padding: 8px 0;
+            color: #444;
+            font-size: 0.5em;
+            border-top: 1px solid rgba(255,255,255,0.03);
+            margin-top: 4px;
+            line-height: 1.6;
+        }
+        .status .live { color: #00c853; font-weight: 600; }
+        .status a { color: #00d4ff; text-decoration: none; }
+        .live-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            margin-right: 4px;
+            background: #00c853;
+            animation: blink 1.5s ease-in-out infinite;
+        }
+        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+        
+        @media (max-width: 400px) {
+            body { padding: 6px; }
+            .spot-price { font-size: 1.3em; }
+            .grid-2 { gap: 5px; }
+            .card { padding: 8px 8px; }
+            .side-grid { gap: 6px; }
+            .strike-table { font-size: 0.45em; min-width: 260px; }
+            .chart-container { height: 120px; }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📊 NIFTY Option Chain Analyzer</h1>
-            <div id="sentimentDisplay"></div>
-            <div class="subtitle" id="lastUpdate">Last Updated: Loading...</div>
-            <div class="subtitle" id="tradingStatus">Status: Checking...</div>
-        </div>
 
-        <div class="grid">
-            <div class="card"><h3>📍 ATM & Spot</h3>
-                <div id="atmData">
-                    <div class="stat-row"><span class="label">Spot Price</span><span class="value" id="spotPrice">-</span></div>
-                    <div class="stat-row"><span class="label">ATM Strike</span><span class="value" id="atmStrike">-</span></div>
-                </div>
-            </div>
-            <div class="card"><h3>⚡ Peak Strikes</h3>
-                <div id="peakData">
-                    <div class="stat-row"><span class="label">CE Peak</span><span class="value" id="cePeak">-</span></div>
-                    <div class="stat-row"><span class="label">CE Movement</span><span class="value" id="ceMovement">-</span></div>
-                    <div class="stat-row"><span class="label">PE Peak</span><span class="value" id="pePeak">-</span></div>
-                    <div class="stat-row"><span class="label">PE Movement</span><span class="value" id="peMovement">-</span></div>
-                </div>
-            </div>
-            <div class="card"><h3>📈 Buy Side</h3>
-                <div id="buyData">
-                    <div class="stat-row"><span class="label">Entry</span><span class="value" id="buyEntry">-</span></div>
-                    <div class="stat-row"><span class="label">Stop Loss</span><span class="value" id="buySl">-</span></div>
-                    <div class="stat-row"><span class="label">Target 1</span><span class="value" id="buyTarget">-</span></div>
-                    <div class="stat-row"><span class="label">Target 2</span><span class="value" id="buyTarget2">-</span></div>
-                </div>
-            </div>
-            <div class="card"><h3>📉 Sell Side</h3>
-                <div id="sellData">
-                    <div class="stat-row"><span class="label">Entry</span><span class="value" id="sellEntry">-</span></div>
-                    <div class="stat-row"><span class="label">Stop Loss</span><span class="value" id="sellSl">-</span></div>
-                    <div class="stat-row"><span class="label">Target 1</span><span class="value" id="sellTarget">-</span></div>
-                    <div class="stat-row"><span class="label">Target 2</span><span class="value" id="sellTarget2">-</span></div>
-                </div>
-            </div>
-        </div>
+<div class="container">
 
-        <div class="card">
-            <h3>📋 Strike-wise Analysis</h3>
-            <div style="overflow-x: auto;">
-                <table class="strike-table" id="strikeTable">
-                    <thead>
-                        <tr>
-                            <th>CE OI</th>
-                            <th>CE %</th>
-                            <th>Strike</th>
-                            <th>PE %</th>
-                            <th>PE OI</th>
-                        </tr>
-                    </thead>
-                    <tbody id="strikeTableBody">
-                        <tr><td colspan="5" style="text-align:center;color:#888;">Loading data...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    <!-- HEADER -->
+    <div class="header">
+        <h1>📊 NIFTY Analyzer</h1>
+        <div id="sentimentDisplay"></div>
+        <div class="subtitle" id="tradingStatus">Status: Checking...</div>
+    </div>
 
-        <div class="status">
-            <span id="statusIndicator"><span class="status-dot"></span> LIVE</span>
-            | Updates every 1 minute
-            | Trading Hours: 9:00 AM - 3:45 PM IST | EDUCATION PURPOSE ONLY!
-            <br>
-            check my repo for more detail - https://github.com/subhajitdeo/nifty.dna/
+    <!-- SPOT -->
+    <div class="spot-card">
+        <div class="spot-left">
+            <div class="spot-price"><span id="spotPrice">-</span></div>
+            <div class="spot-time" id="lastUpdate">Last Updated: --</div>
+        </div>
+        <div class="spot-right">
+            <div class="spot-expiry">📅 <span id="expiryDisplay">--</span></div>
+            <div class="spot-atm">📍 ATM: <span id="atmStrike">--</span></div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-    </script>
-    <script>
-        // =============================================
-        // SUPABASE CLIENT - SAME AS WORKING TEST
-        // =============================================
-        const SUPABASE_URL = 'https://okxehbgomqsmfbzpsgrm.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9reGVoYmdvbXFzbWZienBzZ3JtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4ODU4NTMsImV4cCI6MjA5NzQ2MTg1M30.8KCec5lIzhha3mRx3b3shRF8bH7-rfVDT3KktR95TBc';
+    <!-- PEAKS -->
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-title">⚡ CE Peak</div>
+            <div class="stat-row"><span class="label">Strike</span><span class="value" id="cePeak">-</span></div>
+            <div class="stat-row"><span class="label">Movement</span><span class="value" id="ceMovement">-</span></div>
+        </div>
+        <div class="card">
+            <div class="card-title">⚡ PE Peak</div>
+            <div class="stat-row"><span class="label">Strike</span><span class="value" id="pePeak">-</span></div>
+            <div class="stat-row"><span class="label">Movement</span><span class="value" id="peMovement">-</span></div>
+        </div>
+    </div>
 
-        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    <!-- CE/PE SIDE -->
+    <div class="side-card">
+        <div class="side-grid">
+            <div class="side-col">
+                <div class="side-label ce">📈 CALL (CE)</div>
+                <div class="stat-row"><span class="label">Entry</span><span class="value" id="buyEntry">-</span></div>
+                <div class="stat-row"><span class="label">SL</span><span class="value" id="buySl">-</span></div>
+                <div class="stat-row"><span class="label">Target 1</span><span class="value" id="buyTarget">-</span></div>
+                <div class="stat-row"><span class="label">Target 2</span><span class="value" id="buyTarget2">-</span></div>
+            </div>
+            <div class="side-col">
+                <div class="side-label pe">📉 PUT (PE)</div>
+                <div class="stat-row"><span class="label">Entry</span><span class="value" id="sellEntry">-</span></div>
+                <div class="stat-row"><span class="label">SL</span><span class="value" id="sellSl">-</span></div>
+                <div class="stat-row"><span class="label">Target 1</span><span class="value" id="sellTarget">-</span></div>
+                <div class="stat-row"><span class="label">Target 2</span><span class="value" id="sellTarget2">-</span></div>
+            </div>
+        </div>
+    </div>
 
-        // =============================================
-        // HELPER FUNCTIONS
-        // =============================================
+    <!-- CHART -->
+    <div class="chart-card">
+        <div class="card-title">📈 ATM OI</div>
+        <div class="chart-container" id="chartContainer"></div>
+    </div>
 
-        function getSentimentClass(s) {
-            if (!s) return 'risky';
-            const t = s.toLowerCase();
-            if (t === 'bullish') return 'bullish';
-            if (t === 'mild bullish') return 'mild-bullish';
-            if (t === 'bearish') return 'bearish';
-            if (t === 'mild bearish') return 'mild-bearish';
-            if (t === 'trap') return 'trap';
-            return 'risky';
-        }
+    <!-- STRIKE TABLE -->
+    <div class="table-card">
+        <div class="card-title">📋 Strike Analysis</div>
+        <div style="overflow-x:auto;">
+            <table class="strike-table" id="strikeTable">
+                <thead>
+                    <tr>
+                        <th>CE OI</th>
+                        <th>CE %</th>
+                        <th style="min-width:60px;">Strike</th>
+                        <th>PE %</th>
+                        <th>PE OI</th>
+                    </tr>
+                </thead>
+                <tbody id="strikeTableBody">
+                    <tr><td colspan="5" style="text-align:center;color:#444;padding:12px 0;">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-        function getMovementClass(m) {
-            if (!m) return 'stable';
-            const t = m.toLowerCase();
-            if (t === 'up') return 'up';
-            if (t === 'down') return 'down';
-            return 'stable';
-        }
+    <!-- FLIPS -->
+    <div class="flip-card">
+        <div class="card-title">🔄 Recent Flips</div>
+        <div id="flipList"><div style="text-align:center;color:#444;padding:6px 0;font-size:0.65em;">No flips yet</div></div>
+    </div>
 
-        function getMovementArrow(m) {
-            if (!m) return '→';
-            const t = m.toLowerCase();
-            if (t === 'up') return '▲';
-            if (t === 'down') return '▼';
-            return '→';
-        }
+    <!-- STATUS -->
+    <div class="status">
+        <span><span class="live-dot"></span> <span class="live">LIVE</span></span>
+        | Updates every 1 min
+        | ⚠️ Educational Purpose Only
+    </div>
 
-        function formatNumber(n) {
-            if (n === null || n === undefined || n === 0) return '-';
-            return Number(n).toLocaleString('en-IN');
-        }
+</div>
 
-        function formatPercentage(n) {
-            if (n === null || n === undefined) return '-';
-            return Number(n).toFixed(1) + '%';
-        }
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
 
-        function formatDiff(n) {
-            if (n === null || n === undefined || n === 0) return '-';
-            if (n > 0) return '+' + formatNumber(n);
-            return formatNumber(n);
-        }
+// =============================================
+// SUPABASE CONFIG
+// =============================================
+const SUPABASE_URL = 'https://kdneyzemvqzhwzztflvq.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkbmV5emVtdnF6aHd6enRmbHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNDI2MzcsImV4cCI6MjA5NzcxODYzN30.MT8XQcFalC2vls8G7BUn06jslzGxUgQc2i_wQ-7Y2so';
 
-        // =============================================
-        // UPDATE DISPLAY
-        // =============================================
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        function updateDisplay(data) {
-            if (!data) {
-                console.log('No data received');
-                return;
+// =============================================
+// CHART
+// =============================================
+let chart = null;
+let ceLine = null;
+let peLine = null;
+let chartCeData = [];
+let chartPeData = [];
+let chartIndex = 0;
+
+function initChart() {
+    const container = document.getElementById('chartContainer');
+    chart = LightweightCharts.createChart(container, {
+        width: container.clientWidth,
+        height: 160,
+        layout: { background: { color: 'transparent' }, textColor: '#444' },
+        grid: { vertLines: { color: 'rgba(255,255,255,0.02)' }, horzLines: { color: 'rgba(255,255,255,0.02)' } },
+        rightPriceScale: { borderColor: 'rgba(255,255,255,0.03)' },
+        timeScale: {
+            borderColor: 'rgba(255,255,255,0.03)',
+            timeVisible: true,
+            secondsVisible: false,
+            tickMarkFormatter: (time) => {
+                const d = new Date(time * 1000);
+                const istTime = new Date(d.getTime() + (5.5 * 60 * 60 * 1000));
+                return istTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
             }
+        },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
+    });
 
-            if (data.last_updated) {
-                const d = new Date(data.last_updated);
-                document.getElementById('lastUpdate').textContent = 'Last Updated: ' + d.toLocaleString('en-IN', {
-                    timeZone: 'Asia/Kolkata'
-                });
-            }
+    ceLine = chart.addLineSeries({ color: '#ef5350', lineWidth: 2, priceLineVisible: false, lastValueVisible: true });
+    peLine = chart.addLineSeries({ color: '#4caf50', lineWidth: 2, priceLineVisible: false, lastValueVisible: true });
 
-            const sentiment = data.sentiment || 'RISKY';
-            const isTrap = data.is_trap || false;
-            const el = document.getElementById('sentimentDisplay');
-            let txt = sentiment;
-            if (isTrap) txt = '⚠️ TRAP - NO TRADE';
-            el.innerHTML = `<div class="sentiment-badge ${getSentimentClass(sentiment)}">${txt}</div>`;
+    return { chart, ceLine, peLine };
+}
 
-            document.getElementById('spotPrice').textContent = formatNumber(data.spot_price);
-            document.getElementById('atmStrike').textContent = formatNumber(data.atm_strike);
-            document.getElementById('cePeak').textContent = formatNumber(data.ce_peak);
-            document.getElementById('pePeak').textContent = formatNumber(data.pe_peak);
+function updateChart(ceData, peData) {
+    if (!chart) {
+        const init = initChart();
+        chart = init.chart;
+        ceLine = init.ceLine;
+        peLine = init.peLine;
+    }
+    if (ceData && ceData.length > 0) ceLine.setData(ceData);
+    if (peData && peData.length > 0) peLine.setData(peData);
+}
 
-            const ce = document.getElementById('ceMovement');
-            ce.textContent = data.ce_movement ? `${getMovementArrow(data.ce_movement)} ${data.ce_movement}` : '-';
-            ce.className = 'value ' + getMovementClass(data.ce_movement);
+function addChartData(ceVal, peVal) {
+    chartIndex++;
+    const ts = Math.floor(Date.now() / 1000);
+    chartCeData.push({ time: ts, value: ceVal || 0 });
+    chartPeData.push({ time: ts, value: peVal || 0 });
+    
+    if (chartCeData.length > 30) chartCeData.shift();
+    if (chartPeData.length > 30) chartPeData.shift();
+    
+    updateChart(chartCeData, chartPeData);
+}
 
-            const pe = document.getElementById('peMovement');
-            pe.textContent = data.pe_movement ? `${getMovementArrow(data.pe_movement)} ${data.pe_movement}` : '-';
-            pe.className = 'value ' + getMovementClass(data.pe_movement);
+// =============================================
+// HELPERS
+// =============================================
+function getSentimentClass(s) {
+    if (!s) return 'risky';
+    const t = s.toLowerCase();
+    if (t === 'bullish') return 'bullish';
+    if (t === 'mild bullish') return 'mild-bullish';
+    if (t === 'bearish') return 'bearish';
+    if (t === 'mild bearish') return 'mild-bearish';
+    if (t === 'trap') return 'trap';
+    return 'risky';
+}
 
-            document.getElementById('buyEntry').textContent = formatNumber(data.buy_entry);
-            document.getElementById('buySl').textContent = formatNumber(data.buy_sl);
-            document.getElementById('buyTarget').textContent = formatNumber(data.buy_target);
-            document.getElementById('buyTarget2').textContent = formatNumber(data.buy_target2);
-            document.getElementById('sellEntry').textContent = formatNumber(data.sell_entry);
-            document.getElementById('sellSl').textContent = formatNumber(data.sell_sl);
-            document.getElementById('sellTarget').textContent = formatNumber(data.sell_target);
-            document.getElementById('sellTarget2').textContent = formatNumber(data.sell_target2);
+function getMovementClass(m) {
+    if (!m) return 'stable';
+    const t = m.toLowerCase();
+    if (t === 'up') return 'up';
+    if (t === 'down') return 'down';
+    return 'stable';
+}
 
+function getMovementArrow(m) {
+    if (!m) return '→';
+    const t = m.toLowerCase();
+    if (t === 'up') return '▲';
+    if (t === 'down') return '▼';
+    return '→';
+}
 
-            if (data.strike_data && data.strike_data.length > 0) {
-                updateStrikeTable(data.strike_data);
-                document.getElementById('tradingStatus').textContent = '✅ System Running - ' + data.strike_data.length + ' strikes';
-            } else {
-                document.getElementById('tradingStatus').textContent = '⚠️ No strike data available';
-            }
+function formatNumber(n) {
+    if (n === null || n === undefined || n === 0) return '-';
+    return Number(n).toLocaleString('en-IN');
+}
+
+function formatPercentage(n) {
+    if (n === null || n === undefined) return '-';
+    return Number(n).toFixed(1) + '%';
+}
+
+function formatDiff(n) {
+    if (n === null || n === undefined || n === 0) return '-';
+    if (n > 0) return '+' + formatNumber(n);
+    return formatNumber(n);
+}
+
+function formatTime(ts) {
+    if (!ts) return '--';
+    const d = new Date(ts);
+    return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+}
+
+// =============================================
+// UPDATE DISPLAY
+// =============================================
+function updateDisplay(data) {
+    if (!data) return;
+
+    document.getElementById('spotPrice').textContent = formatNumber(data.spot_price);
+    document.getElementById('lastUpdate').textContent = 'Updated: ' + formatTime(data.last_updated || data.created_at);
+    document.getElementById('atmStrike').textContent = formatNumber(data.atm_strike);
+    document.getElementById('expiryDisplay').textContent = data.expiry || '--';
+
+    const sentiment = data.sentiment || 'RISKY';
+    const el = document.getElementById('sentimentDisplay');
+    el.innerHTML = `<div class="sentiment-badge ${getSentimentClass(sentiment)}">${sentiment}</div>`;
+
+    document.getElementById('cePeak').textContent = formatNumber(data.ce_peak);
+    document.getElementById('pePeak').textContent = formatNumber(data.pe_peak);
+
+    const ce = document.getElementById('ceMovement');
+    ce.textContent = data.ce_movement ? `${getMovementArrow(data.ce_movement)} ${data.ce_movement}` : '-';
+    ce.className = 'value ' + getMovementClass(data.ce_movement);
+
+    const pe = document.getElementById('peMovement');
+    pe.textContent = data.pe_movement ? `${getMovementArrow(data.pe_movement)} ${data.pe_movement}` : '-';
+    pe.className = 'value ' + getMovementClass(data.pe_movement);
+
+    document.getElementById('buyEntry').textContent = formatNumber(data.buy_entry);
+    document.getElementById('buySl').textContent = formatNumber(data.buy_sl);
+    document.getElementById('buyTarget').textContent = formatNumber(data.buy_target);
+    document.getElementById('buyTarget2').textContent = formatNumber(data.buy_target2);
+    document.getElementById('sellEntry').textContent = formatNumber(data.sell_entry);
+    document.getElementById('sellSl').textContent = formatNumber(data.sell_sl);
+    document.getElementById('sellTarget').textContent = formatNumber(data.sell_target);
+    document.getElementById('sellTarget2').textContent = formatNumber(data.sell_target2);
+
+    document.getElementById('tradingStatus').textContent = '✅ Live';
+
+    if (data.strike_data && data.strike_data.length > 0) {
+        updateStrikeTable(data.strike_data, data.atm_strike);
+        
+        const atmData = data.strike_data.find(s => s.is_atm);
+        if (atmData) {
+            addChartData(atmData.ce_oi, atmData.pe_oi);
+        }
+    } else {
+        document.getElementById('strikeTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#444;padding:12px 0;">No data</td></tr>';
+    }
+}
+
+// =============================================
+// STRIKE TABLE
+// =============================================
+function updateStrikeTable(strikes, atmStrike) {
+    const tbody = document.getElementById('strikeTableBody');
+    tbody.innerHTML = '';
+
+    strikes.forEach(s => {
+        const tr = document.createElement('tr');
+        const cePct = s.ce_oi_pct || 0;
+        const pePct = s.pe_oi_pct || 0;
+
+        let ceClass = '';
+        if (cePct >= 100) ceClass = 'ce-100';
+        else if (cePct >= 75) ceClass = 'ce-strong';
+
+        let peClass = '';
+        if (pePct >= 100) peClass = 'pe-100';
+        else if (pePct >= 75) peClass = 'pe-strong';
+
+        let strikeClass = '';
+        let strikeMiddleClass = '';
+        if (s.is_atm) {
+            strikeClass = 'atm-cell';
+            strikeMiddleClass = 'strike-middle';
         }
 
-        // =============================================
-        // STRIKE TABLE
-        // =============================================
+        const diff = s.oi_diff || 0;
+        const diffClass = diff > 0 ? 'diff-positive' : (diff < 0 ? 'diff-negative' : '');
 
-        function updateStrikeTable(strikes) {
-            const tbody = document.getElementById('strikeTableBody');
-            tbody.innerHTML = '';
+        tr.innerHTML = `
+            <td>${formatNumber(s.ce_oi)}</td>
+            <td class="${ceClass}">${formatPercentage(cePct)}</td>
+            <td>
+                <div class="${strikeClass}" style="font-weight:bold;font-size:1em;padding:2px 0;">
+                    <span class="${strikeMiddleClass}">${formatNumber(s.strike)}</span>
+                </div>
+                <div class="strike-diff ${diffClass}">${formatDiff(diff)}</div>
+            </td>
+            <td class="${peClass}">${formatPercentage(pePct)}</td>
+            <td>${formatNumber(s.pe_oi)}</td>
+        `;
 
-            if (!strikes || strikes.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;">No strike data</td></tr>';
-                return;
-            }
+        tbody.appendChild(tr);
+    });
+}
 
-            strikes.forEach(s => {
-                const tr = document.createElement('tr');
-                const cePct = s.ce_oi_pct || 0;
-                const pePct = s.pe_oi_pct || 0;
+// =============================================
+// FETCH DATA
+// =============================================
+async function fetchLatestData() {
+    try {
+        const { data, error } = await sb
+            .from('option_analysis')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(1);
 
-                let ceClass = '';
-                if (cePct >= 100) ceClass = 'ce-100';
-                else if (cePct >= 75) ceClass = 'ce-strong';
-
-                let peClass = '';
-                if (pePct >= 100) peClass = 'pe-100';
-                else if (pePct >= 75) peClass = 'pe-strong';
-
-                let strikeClass = '';
-                if (s.is_atm) strikeClass = 'atm-cell';
-
-                const diff = s.oi_diff || 0;
-                const diffClass = diff > 0 ? 'diff-positive' : (diff < 0 ? 'diff-negative' : '');
-
-                tr.innerHTML = `
-                    <td>${formatNumber(s.ce_oi)}</td>
-                    <td class="${ceClass}">${formatPercentage(cePct)}</td>
-                    <td>
-                        <div class="${strikeClass}" style="font-weight:bold;">${formatNumber(s.strike)}</div>
-                        <div class="${diffClass}" style="font-size:0.8em; font-weight:600;">${formatDiff(diff)}</div>
-                    </td>
-                    <td class="${peClass}">${formatPercentage(pePct)}</td>
-                    <td>${formatNumber(s.pe_oi)}</td>
-                `;
-
-                tbody.appendChild(tr);
-            });
+        if (error) {
+            document.getElementById('tradingStatus').textContent = '❌ Error';
+            return;
         }
 
-        // =============================================
-        // FETCH DATA - SAME AS WORKING TEST
-        // =============================================
+        if (data && data.length > 0) {
+            updateDisplay(data[0]);
+        } else {
+            document.getElementById('tradingStatus').textContent = '⏳ Waiting...';
+            document.getElementById('strikeTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#444;padding:12px 0;">No data</td></tr>';
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
 
-        async function fetchLatestData() {
-            const output = document.getElementById('data') || document.getElementById('strikeTableBody');
-            
-            try {
-                const { data, error } = await sb
-                    .from('option_analysis')
-                    .select('*')
-                    .order('created_at', { ascending: false })
-                    .limit(1);
+// =============================================
+// FETCH FLIPS
+// =============================================
+async function fetchFlips() {
+    try {
+        const { data, error } = await sb
+            .from('flip_history')
+            .select('*')
+            .order('flipped_at', { ascending: false })
+            .limit(10);
 
-                if (error) {
-                    console.error('Supabase error:', error);
-                    document.getElementById('tradingStatus').textContent = '❌ Error: ' + error.message;
-                    return;
-                }
-
-                if (data && data.length > 0) {
-                    updateDisplay(data[0]);
-                } else {
-                    document.getElementById('tradingStatus').textContent = '⏳ No data found';
-                    document.getElementById('strikeTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;">No data available</td></tr>';
-                }
-            } catch (err) {
-                console.error('Error fetching data:', err);
-                document.getElementById('tradingStatus').textContent = '❌ Error: ' + err.message;
-            }
+        if (error || !data || data.length === 0) {
+            document.getElementById('flipList').innerHTML = '<div style="text-align:center;color:#444;padding:6px 0;font-size:0.65em;">No flips yet</div>';
+            return;
         }
 
-        // =============================================
-        // REALTIME SUBSCRIPTION
-        // =============================================
+        let html = '';
+        data.forEach(f => {
+            const sentimentClass = f.sentiment ? f.sentiment.toLowerCase().replace(' ', '-') : 'risky';
+            html += `
+                <div class="flip-item">
+                    <span class="flip-time">${formatTime(f.flipped_at)}</span>
+                    <span>
+                        <span class="flip-sentiment ${sentimentClass}">${f.sentiment || '--'}</span>
+                        <span class="flip-arrow">→</span>
+                        <span class="flip-price">${formatNumber(f.spot_price)}</span>
+                    </span>
+                </div>
+            `;
+        });
+        document.getElementById('flipList').innerHTML = html;
+    } catch (err) {
+        console.error(err);
+    }
+}
 
-        function setupRealtime() {
-            const channel = sb
-                .channel('option-updates')
-                .on('postgres_changes', {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'option_analysis'
-                }, payload => {
-                    updateDisplay(payload.new);
-                })
-                .subscribe();
+// =============================================
+// REALTIME
+// =============================================
+function setupRealtime() {
+    sb.channel('option-updates')
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'option_analysis'
+        }, payload => {
+            updateDisplay(payload.new);
+            fetchFlips();
+        })
+        .subscribe();
+}
 
-            return channel;
-        }
+// =============================================
+// RESIZE CHART
+// =============================================
+function resizeChart() {
+    if (chart) {
+        const container = document.getElementById('chartContainer');
+        const width = container.clientWidth || 300;
+        chart.resize(width, 160);
+    }
+}
 
-        // =============================================
-        // INIT
-        // =============================================
+// =============================================
+// INIT
+// =============================================
+async function init() {
+    await new Promise(r => setTimeout(r, 100));
+    initChart();
+    await fetchLatestData();
+    await fetchFlips();
+    setupRealtime();
+    setInterval(fetchLatestData, 10000);
+    setInterval(fetchFlips, 30000);
 
-        async function init() {
-            await fetchLatestData();
-            setupRealtime();
-            setInterval(fetchLatestData, 10000);
-        }
+    window.addEventListener('resize', () => setTimeout(resizeChart, 200));
+    window.addEventListener('orientationchange', () => setTimeout(resizeChart, 500));
+}
 
-        init();
-    </script>
+init();
+</script>
 </body>
 </html>
