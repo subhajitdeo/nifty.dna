@@ -322,39 +322,10 @@
 <script>
 
 // =============================================
-// SUPABASE CONFIG
+// SUPABASE CONFIG - CORRECT KEYS
 // =============================================
 const SUPABASE_URL = 'https://kdneyzemvqzhwzztflvq.supabase.co';
-const SUPABASE_KEY = '// =============================================
-// TEST WITH YOUR CORRECT ANON KEY
-// =============================================
-
-const TEST_URL = 'https://kdneyzemvqzhwzztflvq.supabase.co';
-const TEST_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkbmV5emVtdnF6aHd6enRmbHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNDI2MzcsImV4cCI6MjA5NzcxODYzN30.qtbbxJqo6Jh4rQZ3QdpH5w7B6j3xrv_mOJ9gBQR3F8E';
-
-const TEST_CLIENT = window.supabase.createClient(TEST_URL, TEST_KEY);
-
-async function testNow() {
-    console.log('🔍 Testing with your correct anon key...');
-    const { data, error } = await TEST_CLIENT
-        .from('option_analysis')
-        .select('*')
-        .limit(1);
-    
-    if (error) {
-        console.log('❌ Error:', error);
-        return;
-    }
-    
-    if (data && data.length > 0) {
-        console.log('✅ SUCCESS! Data found:');
-        console.log('📊 Record:', data[0]);
-    } else {
-        console.log('⚠️ Connected but no data found');
-    }
-}
-
-testNow();';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkbmV5emVtdnF6aHd6enRmbHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNDI2MzcsImV4cCI6MjA5NzcxODYzN30.qtbbxJqo6Jh4rQZ3QdpH5w7B6j3xrv_mOJ9gBQR3F8E';
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -474,7 +445,13 @@ function formatTime(ts) {
 // UPDATE DISPLAY
 // =============================================
 function updateDisplay(data) {
-    if (!data) return;
+    if (!data) {
+        console.log('No data received');
+        document.getElementById('tradingStatus').textContent = '⚠️ No data';
+        return;
+    }
+
+    console.log('Updating display:', data);
 
     document.getElementById('spotPrice').textContent = formatNumber(data.spot_price);
     document.getElementById('lastUpdate').textContent = 'Updated: ' + formatTime(data.last_updated || data.created_at);
@@ -515,7 +492,7 @@ function updateDisplay(data) {
             addChartData(atmData.ce_oi, atmData.pe_oi);
         }
     } else {
-        document.getElementById('strikeTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#444;padding:12px 0;">No data</td></tr>';
+        document.getElementById('strikeTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#444;padding:12px 0;">No strike data</td></tr>';
     }
 }
 
@@ -571,6 +548,7 @@ function updateStrikeTable(strikes, atmStrike) {
 // =============================================
 async function fetchLatestData() {
     try {
+        console.log('Fetching latest data...');
         const { data, error } = await sb
             .from('option_analysis')
             .select('*')
@@ -578,18 +556,21 @@ async function fetchLatestData() {
             .limit(1);
 
         if (error) {
-            document.getElementById('tradingStatus').textContent = '❌ Error';
+            console.error('Supabase error:', error);
+            document.getElementById('tradingStatus').textContent = '❌ Error: ' + error.message;
             return;
         }
 
         if (data && data.length > 0) {
             updateDisplay(data[0]);
         } else {
-            document.getElementById('tradingStatus').textContent = '⏳ Waiting...';
+            console.log('No data found in option_analysis');
+            document.getElementById('tradingStatus').textContent = '⏳ No data found';
             document.getElementById('strikeTableBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:#444;padding:12px 0;">No data</td></tr>';
         }
     } catch (err) {
-        console.error(err);
+        console.error('Error fetching data:', err);
+        document.getElementById('tradingStatus').textContent = '❌ Error: ' + err.message;
     }
 }
 
@@ -625,7 +606,7 @@ async function fetchFlips() {
         });
         document.getElementById('flipList').innerHTML = html;
     } catch (err) {
-        console.error(err);
+        console.error('Flip fetch error:', err);
     }
 }
 
@@ -639,6 +620,7 @@ function setupRealtime() {
             schema: 'public',
             table: 'option_analysis'
         }, payload => {
+            console.log('Realtime update received:', payload);
             updateDisplay(payload.new);
             fetchFlips();
         })
@@ -660,6 +642,9 @@ function resizeChart() {
 // INIT
 // =============================================
 async function init() {
+    console.log('🚀 Initializing...');
+    console.log('📡 Connecting to:', SUPABASE_URL);
+    
     await new Promise(r => setTimeout(r, 100));
     initChart();
     await fetchLatestData();
@@ -670,6 +655,8 @@ async function init() {
 
     window.addEventListener('resize', () => setTimeout(resizeChart, 200));
     window.addEventListener('orientationchange', () => setTimeout(resizeChart, 500));
+    
+    console.log('✅ Initialization complete');
 }
 
 init();
