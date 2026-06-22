@@ -1,10 +1,15 @@
 // =============================================
 // FUNCTION NAME: process-data
-// WITH PERSISTENT STATE & RELIABLE TIME CHECK
+// PURPOSE: Fetch raw data from fetch-nse, calculate, save to DB
+// NO TIME CHECK - RUNS 24/7
 // =============================================
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+// =============================================
+// CONFIG
+// =============================================
 
 const CONFIG = {
   STRIKE_RANGE: 5,
@@ -13,7 +18,7 @@ const CONFIG = {
 };
 
 // =============================================
-// STATE (Will be loaded from database)
+// STATE (Loaded from database)
 // =============================================
 
 const state = {
@@ -116,40 +121,6 @@ async function saveState(supabaseClient: any) {
 }
 
 // =============================================
-// RELIABLE IST TIME CHECK
-// =============================================
-
-function getISTTime(): { hours: number; minutes: number; day: number } {
-  const formatter = new Intl.DateTimeFormat('en-IN', {
-    timeZone: 'Asia/Kolkata',
-    hour: 'numeric',
-    minute: 'numeric',
-    weekday: 'short',
-    hour12: false
-  });
-
-  const parts = formatter.formatToParts(new Date());
-  
-  const getPart = (type: string) => {
-    const part = parts.find(p => p.type === type);
-    return part ? parseInt(part.value, 10) : 0;
-  };
-
-  const weekdayMap: { [key: string]: number } = {
-    'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6, 'Sun': 0
-  };
-  
-  const weekday = parts.find(p => p.type === 'weekday')?.value || 'Mon';
-  const day = weekdayMap[weekday] ?? 1;
-
-  return {
-    hours: getPart('hour'),
-    minutes: getPart('minute'),
-    day: day
-  };
-}
-
-// =============================================
 // MAIN HANDLER
 // =============================================
 
@@ -160,38 +131,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
-
-    // =============================================
-    // TIME CHECK (Reliable IST)
-    // =============================================
-    const { hours, minutes, day } = getISTTime();
-
-    // Weekend check
-    if (day === 0 || day === 6) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          message: 'Weekend - Market closed',
-          timestamp: new Date().toISOString()
-        }),
-        { headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Trading hours check (9:00 AM - 3:35 PM IST)
-    const isTradingTime = (hours >= 9 && hours < 15) || 
-                          (hours === 15 && minutes <= 35);
-
-    if (!isTradingTime) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          message: 'Outside trading hours (9:00 AM - 3:35 PM IST)',
-          timestamp: new Date().toISOString()
-        }),
-        { headers: { 'Content-Type': 'application/json' } }
-      );
-    }
 
     // =============================================
     // LOAD PERSISTENT STATE
@@ -446,7 +385,7 @@ serve(async (req) => {
 });
 
 // =============================================
-// HELPER FUNCTIONS (Keep as they are)
+// HELPER FUNCTIONS
 // =============================================
 
 function findHighestAndSecond(
